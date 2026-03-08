@@ -14,22 +14,29 @@ public class Reservation {
     private LocalDateTime startTime;
     @Column(name = "ENDTIME")
     private LocalDateTime endTime;
-    @Column(name = "size")
+    @Column(name = "SIZE")
     private int size;
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "TABLE_ID", referencedColumnName = "ID")
-    private restaurant_table table;
-    @Column(name = "INFO")
+    private Restaurant_table table_id;
+    @Column(name = "CLIENT_INFO")
     private String client_info;
 
     public Reservation() {
     }
 
-    public Reservation(String client_info, LocalDateTime endTime, int size, LocalDateTime startTime, restaurant_table table) {
+    public Reservation(String client_info, LocalDateTime endTime, int size, LocalDateTime startTime, Restaurant_table table_id) {
         this.client_info = client_info;
         this.endTime = endTime;
         this.size = size;
         this.startTime = startTime;
-        this.table = table;
+        this.table_id = table_id;
+    }
+
+    public Reservation(Restaurant_table table_id, LocalDateTime startTime, LocalDateTime endTime, int size) {
+        this.endTime = endTime;
+        this.size = size;
+        this.startTime = startTime;
+        this.table_id = table_id;
     }
 }

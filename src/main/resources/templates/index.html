@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Restorani Saaliplaan</title>
+    <style>
+        .floor-plan {
+            position: relative;
+            width: 800px;
+            height: 600px;
+            border: 2px solid #333;
+            background-color: #f9f9f9;
+            margin: 20px auto;
+        }
+        .table-icon {
+        position: absolute;
+        width: 60px;
+        height: 60px;
+        background-color: #4CAF50;
+        color: white;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 12px;
+        font-weight: bold;
+        box-shadow: 2px 2px 5 px rgba(0, 0, 0, 0.2);
+        }
+    </style>
+</head>
+<body>
+    <h1 style="text-align: center;">Restorani saaliplaan</h1>
+    <div id="floor-plan" style="position: relative; width: 800px; height: 600px; border: 3px solid #333; margin: 0 auto; background-color: #fff;">
+
+        <div th:each="t : ${tables}" th:if="${t != null}">
+            <div class="table-icon"
+                 th:style="|
+                position: absolute;
+                left: ${t.coordinateX}px;
+                top: ${t.coordinateY}px;
+                width: ${(t.size / 2) * 50}px;
+                height: 50px;
+                background-color: #8d6e63;
+                border: 2px solid #5d4037;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                color: white;
+                font-size: 12px;
+                box-shadow: 2px 2px 5px rgba(0,0,0,0.2);
+             |">
+
+                <b th:text="'ID: ' + ${t.id}"></b>
+                <span th:text="${t.size} + ' kohta'"></span>
+            </div>
+        </div>
+
+    </div>
+</body>
+</html>
