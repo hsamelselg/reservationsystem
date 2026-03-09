@@ -30,7 +30,27 @@
 </head>
 <body>
     <h1 style="text-align: center;">Restorani saaliplaan</h1>
-    <div id="floor-plan" style="position: relative; width: 800px; height: 600px; border: 3px solid #333; margin: 0 auto; background-color: #fff;">
+    <div style="margin-bottom: 20px; padding: 15px; background-color: #f4f4f4; border-radius: 8px;">
+        <form action="/search" method="get" style="display: flex; gap: 15px; align-items: flex-end; justify-content: center;">
+            <div>
+                <label>Inimeste arv:</label><br>
+                <input type="number" name="people" min="1" max="10" required style="padding: 5px;">
+            </div>
+            <div>
+                <label>Kuupäev ja kellaaeg:</label><br>
+                <input type="datetime-local" name="dateTime" required style="padding: 5px;">
+            </div>
+            <button type="submit" style="padding: 5px 15px; background-color: #4CAF50; color: white; border: none; cursor: pointer;">
+                OTSI VABU LAUDU
+            </button>
+        </form>
+    </div>
+    <div id="floor-plan" style="position: relative; width: 800px; height: 500px; border: 3px solid black; margin: 0 auto; background-color: #fdfdfd;">
+
+        <div style="position: absolute; left: 520px; top: 0; bottom: 0; width: 2px; background-color: black;"></div>
+
+        <div style="position: absolute; left: 230px; bottom: 10px; font-weight: bold; font-size: 20px; opacity: 0.3;">SAAL</div>
+        <div style="position: absolute; left: 620px; bottom: 10px; font-weight: bold; font-size: 20px; opacity: 0.3;">TERASS</div>
 
         <div th:each="t : ${tables}" th:if="${t != null}">
             <div class="table-icon"
@@ -38,24 +58,22 @@
                 position: absolute;
                 left: ${t.coordinateX}px;
                 top: ${t.coordinateY}px;
-                width: ${(t.size / 2) * 50}px;
+                width: ${(t.size == 6 ? 150 : (t.size == 4 ? 100 : 60))}px;
                 height: 50px;
-                background-color: #8d6e63;
-                border: 2px solid #5d4037;
+                background-color: ${availableTables != null && availableTables.contains(t)
+                    ? '#4CAF50'
+                    : (t.zone == 'Terass' ? '#90caf9' : '#8d6e63')};
+                border: 2px solid #333;
                 display: flex;
-                flex-direction: column;
                 align-items: center;
                 justify-content: center;
                 color: white;
-                font-size: 12px;
-                box-shadow: 2px 2px 5px rgba(0,0,0,0.2);
+                font-weight: bold;
+                transition: background-color 0.3s;
              |">
-
-                <b th:text="'ID: ' + ${t.id}"></b>
-                <span th:text="${t.size} + ' kohta'"></span>
+                <span th:text="${t.size} + 'p'"></span>
             </div>
         </div>
-
     </div>
 </body>
 </html>

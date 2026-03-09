@@ -1,5 +1,6 @@
 package org.example.reservationsystem.config;
 
+import org.example.reservationsystem.ReservationService;
 import org.example.reservationsystem.dataobjects.Reservation;
 import org.example.reservationsystem.dataobjects.Restaurant_table;
 import org.example.reservationsystem.repository.ReservationRepository;
@@ -15,43 +16,43 @@ import java.util.List;
 public class DataInitializer implements CommandLineRunner {
     private final ReservationRepository reservationRepository;
     private final TableRepository tableRepository;
-    public DataInitializer(ReservationRepository reservationRepository, TableRepository tableRepository) {
+    private final ReservationService reservationService;
+
+    public DataInitializer(ReservationRepository reservationRepository, TableRepository tableRepository,  ReservationService reservationService) {
         this.reservationRepository=reservationRepository;
         this.tableRepository=tableRepository;
+        this.reservationService=reservationService;
     }
     public void run(String... args) throws Exception {
         if (tableRepository.count() == 0) {
-            int rows = 5;
-            int yOffset = 50; // Reavahe
+            tableRepository.save(new Restaurant_table(50, 50, true, true, false, 2, "Saal")); // 2p
+            tableRepository.save(new Restaurant_table(175, 50, false, false, false, 6, "Saal")); // 6p
+            tableRepository.save(new Restaurant_table(400, 50, true, true, true, 2, "Saal")); // 2p
 
-            for (int r = 0; r < rows; r++) {
-                int currentX = 50;
-                int seatsInRow = 0;
+            // 2. rida
+            tableRepository.save(new Restaurant_table(50, 150, false, false, false, 4, "Saal")); // 4p
+            tableRepository.save(new Restaurant_table(250, 150, true, false, false, 2, "Saal")); // 2p
+            tableRepository.save(new Restaurant_table(400, 150, true, false, true, 2, "Saal")); // 2p
 
-                while (seatsInRow < 10) {
-                    // Valime suvaliselt laua suuruse: 2, 4 või 6
-                    int size = (int) (Math.random() * 3 + 1) * 2;
+            // 3. rida
+            tableRepository.save(new Restaurant_table(100, 250, false, false, false, 4, "Saal")); // 4p
+            tableRepository.save(new Restaurant_table(300, 250, true, false, false, 4, "Saal")); // 4p
 
-                    Restaurant_table table = new Restaurant_table();
-                    table.setCoordinateX(currentX);
-                    table.setCoordinateY(yOffset + (r * 100)); // Ridade vahe 100px
-                    table.setSize(size);
-                    table.setZone("Saal");
-                    table.setAccessible(true);
-                    table.setQuietCorner(false);
-                    table.setWindowSeat(r == 0); // Esimene rida akna all
+            // 4. rida
+            tableRepository.save(new Restaurant_table(50, 350, false, true, false, 6, "Saal")); // 6p
+            tableRepository.save(new Restaurant_table(375, 350, true, false, true, 4, "Saal")); // 2p
 
-                    tableRepository.save(table);
+            // --- TERASS (Parem pool) ---
+            tableRepository.save(new Restaurant_table(575, 50, true, false, true, 6, "Terass")); // 6p (ülal)
+            tableRepository.save(new Restaurant_table(550, 150, true, false, true, 2, "Terass")); // 2p
+            tableRepository.save(new Restaurant_table(675, 150, true, false, true, 2, "Terass")); // 2p
+            tableRepository.save(new Restaurant_table(550, 250, true, false, true, 4, "Terass")); // 4p
+            tableRepository.save(new Restaurant_table(650, 350, true, false, true, 4, "Terass")); // 4p
 
-                    // Arvutame järgmise laua asukoha reas
-                    // 2-kohaline võtab 60px, 4-kohaline 120px jne
-                    currentX += (size / 2) * 60 + 20;
-                    seatsInRow += size;
-                }
-            }
+
             List<Restaurant_table> restaurantTables = tableRepository.findAll();
 
-            for (int i = 0; i < 3; i++) {
+            for (int i = 0; i < restaurantTables.size()/2; i++) {
                 int rand_table_number = (int) (Math.random() * restaurantTables.size());
                 Restaurant_table resv_table = restaurantTables.get(rand_table_number);
                 LocalDateTime startTime = LocalDateTime.now().plusHours((int) (Math.random() * 24));
@@ -60,6 +61,7 @@ public class DataInitializer implements CommandLineRunner {
                 Reservation reservation = new Reservation(resv_table, startTime, endTime, size);
                 reservationRepository.save(reservation);
             }
+            System.out.println(reservationRepository.findAll());
 
         }
     }
