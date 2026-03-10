@@ -19,4 +19,5 @@ public interface ReservationRepository extends JpaRepository<Reservation, Intege
             @Param("start") LocalDateTime start,
             @Param("end") LocalDateTime end
     );
+
 }

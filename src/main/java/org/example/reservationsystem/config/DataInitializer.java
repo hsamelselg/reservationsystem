@@ -55,13 +55,21 @@ public class DataInitializer implements CommandLineRunner {
             for (int i = 0; i < restaurantTables.size()/2; i++) {
                 int rand_table_number = (int) (Math.random() * restaurantTables.size());
                 Restaurant_table resv_table = restaurantTables.get(rand_table_number);
-                LocalDateTime startTime = LocalDateTime.now().plusHours((int) (Math.random() * 24));
+                int hour = (int) (Math.random() * 11) + 10;
+                LocalDateTime startTime = LocalDateTime.now()
+                        .withHour(hour)
+                        .withMinute(0)
+                        .withSecond(0)
+                        .withNano(0);
+                if (startTime.isBefore(LocalDateTime.now())) {
+                    startTime = startTime.plusDays(1);
+                }
                 LocalDateTime endTime = startTime.plusHours(2);
                 int size = resv_table.getSize();
                 Reservation reservation = new Reservation(resv_table, startTime, endTime, size);
                 reservationRepository.save(reservation);
+                System.out.println(reservation.toString());
             }
-            System.out.println(reservationRepository.findAll());
 
         }
     }
