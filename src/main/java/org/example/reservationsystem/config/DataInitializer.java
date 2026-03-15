@@ -9,7 +9,6 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 
 
@@ -24,8 +23,11 @@ public class DataInitializer implements CommandLineRunner {
         this.tableRepository=tableRepository;
         this.reservationService=reservationService;
     }
+
     public void run(String... args) throws Exception {
         if (tableRepository.count() == 0) {
+            // loome lauad
+            // 1. rida
             tableRepository.save(new Restaurant_table(50, 50,  2, "Saal", List.of("Vaikne nurk", "Seina lähedal"))); // 2p
             tableRepository.save(new Restaurant_table(175, 50, 6, "Saal", List.of("Seina lähedal"))); // 6p
             tableRepository.save(new Restaurant_table(400, 50, 2, "Saal", List.of("Akna all", "Vaikne nurk", "Seina lähedal"))); // 2p
@@ -43,7 +45,7 @@ public class DataInitializer implements CommandLineRunner {
             tableRepository.save(new Restaurant_table(50, 350, 6, "Saal", List.of("Seina lähedal", "Vaikne nurk"))); // 6p
             tableRepository.save(new Restaurant_table(375, 350, 4, "Saal", List.of("Akna all", "Mängunurga lähedal"))); // 2p
 
-            // --- TERASS (Parem pool) ---
+            // --- TERASS ---
             tableRepository.save(new Restaurant_table(575, 50, 6, "Terrass", List.of("Seina lähedal"))); // 6p (ülal)
             tableRepository.save(new Restaurant_table(550, 150, 2, "Terrass", List.of("Seina lähedal"))); // 2p
             tableRepository.save(new Restaurant_table(675, 150, 2, "Terrass", List.of())); // 2p
@@ -53,6 +55,7 @@ public class DataInitializer implements CommandLineRunner {
 
             List<Restaurant_table> restaurantTables = tableRepository.findAll();
 
+            // Genereerime juhuslikult pooltele laudadele broneeringud
             for (int i = 0; i < restaurantTables.size()/2; i++) {
                 int rand_table_number = (int) (Math.random() * restaurantTables.size());
                 Restaurant_table resv_table = restaurantTables.get(rand_table_number);

@@ -29,12 +29,6 @@ public class Restaurant_table {
     public Restaurant_table() {
     }
 
-    public Restaurant_table(int size, double coordinateX, double coordinateY) {
-        this.size = size;
-        this.coordinateX = coordinateX;
-        this.coordinateY = coordinateY;
-    }
-
     public Restaurant_table(double coordinateX, double coordinateY, int size, String zone, List<String> features) {
         this.coordinateX = coordinateX;
         this.coordinateY = coordinateY;

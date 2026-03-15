@@ -12,6 +12,7 @@ import java.util.List;
 
 @Repository
 public interface ReservationRepository extends JpaRepository<Reservation, Integer> {
+    // AI (Gemini) kood
     @Query("SELECT r FROM Reservation r WHERE r.table_id = :table "+
             "AND NOT (r.endTime <= :start OR r.startTime >= :end)")
     List<Reservation> findOverlappingReservations(

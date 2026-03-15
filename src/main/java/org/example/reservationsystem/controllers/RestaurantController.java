@@ -14,7 +14,6 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
-import java.nio.channels.ScatteringByteChannel;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
@@ -36,11 +35,6 @@ public class RestaurantController {
     public String showFloorPlan(Model model) {
         List<Restaurant_table> tables = tableRepository.findAll();
 
-        for (Restaurant_table t : tables) {
-            if (t == null) System.out.println("LEIDSIN TÜHJA LAUA!");
-            else System.out.println("Laud ID: " + t.getId() + " (" + t.getZone() + ")" + " " + t.getFeatures().toString() + " Broneeringud: " + t.getReservations().toString());
-        }
-
         model.addAttribute("tables", tables);
         model.addAttribute("isSearch", false);
         return "index";
@@ -55,12 +49,13 @@ public class RestaurantController {
         try {
             Restaurant_table maxTable = tableRepository.findFirstByOrderBySizeDesc().orElseThrow(() -> new RuntimeException("Restoranis puuduvad lauad!"));
             if (people > maxTable.getSize()) {
-                throw new BigGroupException("Vabandust, aga Teie seltskond meie restorani jaoks liiga suur!<br>" +
+                throw new BigGroupException("Vabandust, aga Teie seltskond on meie restorani jaoks liiga suur!<br>" +
                         "Soovitame broneerida mitu väiksemat lauda :) ");
             }
 
             DateTimeFormatter formatter = DateTimeFormatter.ISO_LOCAL_DATE_TIME;
             LocalDateTime start = LocalDateTime.parse(dateTime, formatter);
+
             LocalTime bookingTime = start.toLocalTime();
             LocalTime openingTime = LocalTime.of(10, 0);
             LocalTime closingTime = LocalTime.of(20, 0);
@@ -81,11 +76,10 @@ public class RestaurantController {
             Map<Restaurant_table, Integer> suitableTables = new HashMap<>();
             for (Restaurant_table t : available) {
                 if (t != null) {
-                    int FittingScore = calculateScore(t, people, zone, features);
-                    suitableTables.put(t, FittingScore);
+                    int fittingScore = calculateScore(t, people, zone, features);
+                    suitableTables.put(t, fittingScore);
                 }
             }
-            System.out.println("SuitableTables: " + suitableTables.toString());
 
             Restaurant_table bestTable = null;
             for (Map.Entry<Restaurant_table, Integer> entry : suitableTables.entrySet()) {
@@ -93,7 +87,6 @@ public class RestaurantController {
                     bestTable = entry.getKey();
                 }
             }
-            System.out.println("BestTable: " + bestTable.toString());
 
             model.addAttribute("tables", tableRepository.findAll());
             model.addAttribute("availableTables", available);
@@ -102,17 +95,15 @@ public class RestaurantController {
 
             model.addAttribute("selectedDateTime", dateTime);
             return "index";
-        } catch (InvalidDateException e) {
+
+        } catch (InvalidDateException | BigGroupException e) {
             model.addAttribute("errorMessage", e.getMessage());
             model.addAttribute("tables", tableRepository.findAll());
             return "index";
-        } catch (BigGroupException e) {
-            model.addAttribute("errorMessage", e.getMessage());
-            model.addAttribute("tables", tableRepository.findAll());
-            return "index";
-        }
 
         }
+
+    }
 
         private int calculateScore (Restaurant_table t,int people, String zone, List < String > features){
             int score = 0;
@@ -153,7 +144,6 @@ public class RestaurantController {
             reservation.setClientPhone(clientPhone);
 
             reservationRepository.save(reservation);
-            System.out.println("Laud: " + reservation.getTable_id() + " broneeritud. Algus: " + reservation.getStartTime() + ", Lõpp:" + reservation.getEndTime());
             return "redirect:/?success=true";
         }
 
