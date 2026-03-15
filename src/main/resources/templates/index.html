@@ -29,7 +29,12 @@
     </style>
 </head>
 <body>
-    <h1 style="text-align: center;">Restorani saaliplaan</h1>
+    <h1 style="text-align: center;">Restoran <span style="color: #94260C;">DOZO</span></h1>
+    <h4 style="text-align: center;">Oleme siiralt rõõmsad, et olete meile külla tulemas!!</h4>
+    <h5 style="text-align: center;">* Restoran on avatud 10:00-22:00.</h5>
+    <h5 style="text-align: center;">* Laudu saab broneerida 10:00-20:00.</h5>
+    <h5 style="text-align: center;">* Broneeringud on automaatselt tehtud 2 tunniks.</h5>
+
     <div style="margin-bottom: 20px; padding: 15px; background-color: #f4f4f4; border-radius: 8px;">
         <form action="/search" method="get" style="display: flex; gap: 15px; align-items: flex-end; justify-content: center;">
             <div>
@@ -38,7 +43,30 @@
             </div>
             <div>
                 <label>Kuupäev ja kellaaeg:</label><br>
-                <input type="datetime-local" name="dateTime" required style="padding: 5px;">
+                <input type="datetime-local" name="dateTime" step="900" required style="padding: 5px;">
+            </div>
+            <div>
+                <label>Tsoon:</label><br>
+                <select name="zone" style="padding: 5px;">
+                    <option value="Kõik">Kõik lauad</option>
+                    <option value="Saal">Saal</option>
+                    <option value="Terrass">Terrass</option>
+                </select>
+            </div>
+            <div>
+                <label>Filtrid:</label><br>
+                <label>
+                    <input type="checkbox" name="features" value="Akna all"> Akna all
+                </label>
+                <label>
+                    <input type="checkbox" name="features" value="Vaikne nurk">Vaikne nurk
+                </label>
+                <label>
+                    <input type="checkbox" name="features" value="Mängunurk">Märgunurga lähedal
+                </label>
+                <label>
+                    <input type="checkbox" name="features" value="Sein">Seina lähedal
+                </label>
             </div>
             <button type="submit" style="padding: 5px 15px; background-color: #4CAF50; color: white; border: none; cursor: pointer;">
                 OTSI VABU LAUDU
@@ -50,7 +78,7 @@
         <div style="position: absolute; left: 520px; top: 0; bottom: 0; width: 2px; background-color: black;"></div>
 
         <div style="position: absolute; left: 230px; bottom: 10px; font-weight: bold; font-size: 20px; opacity: 0.3;">SAAL</div>
-        <div style="position: absolute; left: 620px; bottom: 10px; font-weight: bold; font-size: 20px; opacity: 0.3;">TERASS</div>
+        <div style="position: absolute; left: 620px; bottom: 10px; font-weight: bold; font-size: 20px; opacity: 0.3;">TERRASS</div>
 
         <div th:each="t : ${tables}" th:if="${t != null}">
             <div class="table-icon"
@@ -62,26 +90,37 @@
         height: 50px;
         background-color: ${(isSearch == true && availableTables != null && availableTables.contains(t))
             ? '#4CAF50'
-            : (t.zone == 'Terass' ? '#90caf9' : '#8d6e63')};
+            : (t.zone == 'Terrass' ? '#90caf9' : '#8d6e63')};
         border: 2px solid #333;
         display: flex;
         align-items: center;
         justify-content: center;
         color: white;
         font-weight: bold;
+        border: ${(bestTable?.id == t.id) ? '5px solid gold' : '2px solid #333'};
+        z-index: ${(bestTable?.id == t.id) ? '10' : '1'};
     |">
+                <div th:if="${bestTable != null && bestTable.id == t.id}"
+                     style="position: absolute; top: -30px; background: gold; color: black; padding: 2px 8px; font-size: 11px; font-weight: bold; border-radius: 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.2); white-space: nowrap;">
+                    ⭐ PARIM VALIK
+                </div>
+
                 <a th:if="${isSearch == true && availableTables != null && availableTables.contains(t)}"
                    href="javascript:void(0);"
                    th:onclick="openModal([[${t.id}]], [[${t.size}]], [[${selectedDateTime}]])"
                    style="color: white; text-decoration: underline; cursor: pointer;">
-                    <span th:text="${t.size} + 'p'"></span>
+                    <span th:text="${t.size} + 'p VALI'"></span>
                 </a>
 
                 <span th:unless="${isSearch == true && availableTables != null && availableTables.contains(t)}"
                       th:text="${t.size} + 'p'"></span>
+
             </div>
         </div>
     </div>
+
+
+
     <div id="bookingModal" style="display:none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5);">
         <div style="background-color: white; margin: 15% auto; padding: 20px; border-radius: 10px; width: 350px; box-shadow: 0 5px 15px rgba(0,0,0,0.3);">
             <h3 id="modalTitle">Broneeri laud</h3>
@@ -109,6 +148,32 @@
             </form>
         </div>
     </div>
+    <div id="confirmModal"
+         th:if="${param.success != null}"
+         style="display:flex; position:fixed; z-index:9999; left:0; top:0; width:100%; height:100%; background-color:rgba(0,0,0,0.6); align-items:center; justify-content:center;">
+        <div style="background-color: white; padding: 30px; border-radius: 12px; width: 300px; text-align: center; box-shadow: 0 5px 20px rgba(0,0,0,0.4);">
+            <h2 style="margin-top: 0; color: #4CAF50;">✔ Tehtud!</h2>
+            <p>Teie broneering on edukalt kinnitatud.</p>
+            <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;">
+            <button onclick="closeConfirmAndHome()"
+                    style="color: white; padding: 10px 30px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; background-color: #4CAF50;">
+                SELGE
+            </button>
+        </div>
+    </div>
+    <div id="errorModal"
+         th:if="${errorMessage != null}"
+         style="display:flex; position:fixed; z-index:9999; left:0; top:0; width:100%; height:100%; background-color:rgba(0,0,0,0.6); align-items:center; justify-content:center;">
+        <div style="background-color: white; padding: 30px; border-radius: 12px; width: 300px; text-align: center; box-shadow: 0 5px 20px rgba(0,0,0,0.4);">
+            <h2 style="margin-top: 0; color: #f44336;">❌ Viga!</h2>
+            <p th:utext="${errorMessage}"></p>
+            <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;">
+            <button onclick="closeErrorModal()"
+                    style="color: white; padding: 10px 30px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; background-color: #f44336;">
+                PROOVI UUESTI
+            </button>
+        </div>
+    </div>
     <script>
         function openModal(tableId, size, dateTime) {
             document.getElementById('modalTableId').value = tableId;
@@ -123,10 +188,29 @@
 
         // Kui klõpsatakse aknast väljapoole, sulge aken
         window.onclick = function(event) {
-            let modal = document.getElementById('bookingModal');
-            if (event.target == modal) {
-                closeModal();
+            let bModal = document.getElementById('bookingModal');
+            let cModal = document.getElementById('confirmModal');
+            let eModal = document.getElementById('errorModal');
+
+            if (event.target == bModal) closeModal();
+            if (event.target == bModal) closeConfirmAndHome();
+            if (event.target == eModal) closeErrorModal();
+        }
+        window.onload = function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get('success') === 'true') {
+                // Näitame kinnituse akent
+                document.getElementById('confirmModal').style.display = "flex";
             }
+        }
+
+        function closeErrorModal() {
+            // Vea puhul lihtsalt peidame akna, et kasutaja saaks andmeid parandada
+            let eModal = document.getElementById('errorModal');
+            if (eModal) eModal.style.display = "none";
+        }
+        function closeConfirmAndHome() {
+            window.location.href = "/";
         }
     </script>
 </body>

@@ -1,6 +1,8 @@
 package org.example.reservationsystem.controllers;
 
 
+import org.example.reservationsystem.BigGroupException;
+import org.example.reservationsystem.InvalidDateException;
 import org.example.reservationsystem.ReservationService;
 import org.example.reservationsystem.dataobjects.Reservation;
 import org.example.reservationsystem.dataobjects.Restaurant_table;
@@ -12,9 +14,13 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
+import java.nio.channels.ScatteringByteChannel;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Controller
 public class RestaurantController {
@@ -32,7 +38,7 @@ public class RestaurantController {
 
         for (Restaurant_table t : tables) {
             if (t == null) System.out.println("LEIDSIN TÜHJA LAUA!");
-            else System.out.println("Laud ID: " + t.getId() + " X: " + t.getCoordinateX());
+            else System.out.println("Laud ID: " + t.getId() + " (" + t.getZone() + ")" + " " + t.getFeatures().toString() + " Broneeringud: " + t.getReservations().toString());
         }
 
         model.addAttribute("tables", tables);
@@ -43,37 +49,112 @@ public class RestaurantController {
     @GetMapping("/search")
     public String showAvailableTables(
             Model model, @RequestParam("people") int people,
-            @RequestParam("dateTime") String dateTime) {
-        DateTimeFormatter formatter = DateTimeFormatter.ISO_LOCAL_DATE_TIME;
-        LocalDateTime start = LocalDateTime.parse(dateTime, formatter);
-        LocalDateTime end = start.plusHours(2);
+            @RequestParam("dateTime") String dateTime,
+            @RequestParam("zone") String zone,
+            @RequestParam(value="features", required = false) List<String> features) {
+        try {
+            Restaurant_table maxTable = tableRepository.findFirstByOrderBySizeDesc().orElseThrow(() -> new RuntimeException("Restoranis puuduvad lauad!"));
+            if (people > maxTable.getSize()) {
+                throw new BigGroupException("Vabandust, aga Teie seltskond meie restorani jaoks liiga suur!<br>" +
+                        "Soovitame broneerida mitu väiksemat lauda :) ");
+            }
 
-        List<Restaurant_table> available = reservationService.availableTables(people, start, end);
+            DateTimeFormatter formatter = DateTimeFormatter.ISO_LOCAL_DATE_TIME;
+            LocalDateTime start = LocalDateTime.parse(dateTime, formatter);
+            LocalTime bookingTime = start.toLocalTime();
+            LocalTime openingTime = LocalTime.of(10, 0);
+            LocalTime closingTime = LocalTime.of(20, 0);
 
-        model.addAttribute("tables", tableRepository.findAll());
-        model.addAttribute("availableTables", available);
-        model.addAttribute("isSearch", true);
+            if (start.isBefore(LocalDateTime.now())) {
+                throw new InvalidDateException("Vabandust, aga minevikku ei saa lauda broneerida!");
+            }
 
-        model.addAttribute("selectedDateTime", dateTime);
-        return "index";
-    }
+            if (bookingTime.isBefore(openingTime) || bookingTime.isAfter(closingTime)) {
+                throw new InvalidDateException("Vabandust, laudu saab broneerida vahemikus 10:00 kuni 20:00.<br>" +
+                        "Palun vali uus kellaaeg!");
+            }
 
-    @PostMapping("/confirm-reservation")
-    public String confirmReservation(
-            @RequestParam("tableId") int tableId,
-            @RequestParam("resvDate") String resvDate,
-            @RequestParam("clientName") String clientName,
-            @RequestParam("clientPhone") String clientPhone
-    ) {
-        Restaurant_table table = tableRepository.findById(tableId).get();
-        LocalDateTime start = LocalDateTime.parse(resvDate);
-        LocalDateTime end = start.plusHours(2);
+            LocalDateTime end = start.plusHours(2);
 
-        Reservation reservation = new Reservation(table, start, end, table.getSize());
-        reservation.setClientName(clientName);
-        reservation.setClientPhone(clientPhone);
+            List<Restaurant_table> available = reservationService.availableTables(people, start, end);
 
-        reservationRepository.save(reservation);
-        return "redirect:/?success=true";
-    }
+            Map<Restaurant_table, Integer> suitableTables = new HashMap<>();
+            for (Restaurant_table t : available) {
+                if (t != null) {
+                    int FittingScore = calculateScore(t, people, zone, features);
+                    suitableTables.put(t, FittingScore);
+                }
+            }
+            System.out.println("SuitableTables: " + suitableTables.toString());
+
+            Restaurant_table bestTable = null;
+            for (Map.Entry<Restaurant_table, Integer> entry : suitableTables.entrySet()) {
+                if (bestTable == null || entry.getValue() < suitableTables.get(bestTable)) {
+                    bestTable = entry.getKey();
+                }
+            }
+            System.out.println("BestTable: " + bestTable.toString());
+
+            model.addAttribute("tables", tableRepository.findAll());
+            model.addAttribute("availableTables", available);
+            model.addAttribute("bestTable", bestTable);
+            model.addAttribute("isSearch", true);
+
+            model.addAttribute("selectedDateTime", dateTime);
+            return "index";
+        } catch (InvalidDateException e) {
+            model.addAttribute("errorMessage", e.getMessage());
+            model.addAttribute("tables", tableRepository.findAll());
+            return "index";
+        } catch (BigGroupException e) {
+            model.addAttribute("errorMessage", e.getMessage());
+            model.addAttribute("tables", tableRepository.findAll());
+            return "index";
+        }
+
+        }
+
+        private int calculateScore (Restaurant_table t,int people, String zone, List < String > features){
+            int score = 0;
+            // table SIZE fitting points
+            score += (t.getSize() - people);
+            // tabel ZONE score
+            if (zone.equals("Kõik")) {
+                score -= 10;
+            } else if (zone.equals("Saal") && t.getZone().equals("Saal")) {
+                score -= 100;
+            } else if (zone.equals("Terrass") && t.getZone().equals("Terrass")) {
+                score -= 100;
+            }
+            // feature scores
+            if (features != null) {
+                for (String feature : features) {
+                    if (t.getFeatures().contains(feature)) {
+                        score -= 10;
+                    }
+                }
+            }
+            return score;
+        }
+
+        @PostMapping("/confirm-reservation")
+        public String confirmReservation (
+        @RequestParam("tableId") int tableId,
+        @RequestParam("resvDate") String resvDate,
+        @RequestParam("clientName") String clientName,
+        @RequestParam("clientPhone") String clientPhone
+    ){
+            Restaurant_table table = tableRepository.findById(tableId).get();
+            LocalDateTime start = LocalDateTime.parse(resvDate);
+            LocalDateTime end = start.plusHours(2);
+
+            Reservation reservation = new Reservation(table, start, end, table.getSize());
+            reservation.setClientName(clientName);
+            reservation.setClientPhone(clientPhone);
+
+            reservationRepository.save(reservation);
+            System.out.println("Laud: " + reservation.getTable_id() + " broneeritud. Algus: " + reservation.getStartTime() + ", Lõpp:" + reservation.getEndTime());
+            return "redirect:/?success=true";
+        }
+
 }

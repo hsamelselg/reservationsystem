@@ -21,14 +21,26 @@ public class ReservationService {
     }
 
     public List<Restaurant_table> availableTables(int people, LocalDateTime start, LocalDateTime end) {
-        List<Restaurant_table> FittingTables = tableRepository.findBySizeGreaterThanEqual(people);
-        List<Restaurant_table> availableTables = new ArrayList<>();
-        for (Restaurant_table FittingTable : FittingTables) {
-            List<Reservation> Reservations = reservationRepository.findOverlappingReservations(FittingTable, start, end);
-            if (Reservations.isEmpty()) {
-                availableTables.add(FittingTable);
+        List<Restaurant_table> fittingTables = tableRepository.findBySizeGreaterThanEqual(people);
+
+        List<Restaurant_table> exactMatchAvailable = new ArrayList<>();
+        List<Restaurant_table> largerAvailable = new ArrayList<>();
+
+        for (Restaurant_table fittingTable : fittingTables) {
+            List<Reservation> reservations = reservationRepository.findOverlappingReservations(fittingTable, start, end);
+
+            if (reservations.isEmpty()) {
+                if (fittingTable.getSize() == people || fittingTable.getSize() == people+1) {
+                    exactMatchAvailable.add(fittingTable);
+                } else {
+                    largerAvailable.add(fittingTable);
+                }
             }
         }
-        return availableTables;
+        if (!exactMatchAvailable.isEmpty()) {
+            return exactMatchAvailable;
+        } else {
+            return largerAvailable;
+        }
     }
 }

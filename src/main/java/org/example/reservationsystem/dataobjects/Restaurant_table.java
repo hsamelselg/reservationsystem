@@ -23,30 +23,37 @@ public class Restaurant_table {
     private double coordinateY;
     @Column(name = "ZONE", nullable = false)
     private String zone;
-    @Column(name = "ISWINDOWSEAT", nullable = false)
-    private boolean isWindowSeat;
-    @Column(name = "ISQUIETCORNER", nullable = false)
-    private boolean isQuietCorner;
-    @Column(name = "ACCESSIBLE", nullable = false)
-    private boolean isAccessible;
+    @ElementCollection
+    private List<String> features;
 
     public Restaurant_table() {
     }
+
     public Restaurant_table(int size, double coordinateX, double coordinateY) {
         this.size = size;
         this.coordinateX = coordinateX;
         this.coordinateY = coordinateY;
     }
 
-    public Restaurant_table(double coordinateX, double coordinateY, boolean isAccessible, boolean isQuietCorner, boolean isWindowSeat, int size, String zone) {
+    public Restaurant_table(double coordinateX, double coordinateY, int size, String zone, List<String> features) {
         this.coordinateX = coordinateX;
         this.coordinateY = coordinateY;
-        this.reservations = reservations;
-        this.isAccessible = isAccessible;
-        this.isQuietCorner = isQuietCorner;
-        this.isWindowSeat = isWindowSeat;
         this.size = size;
         this.zone = zone;
+        this.features = features;
+    }
+
+    @Override
+    public String toString() {
+        return "Restaurant_table{" +
+                " id=" + id +
+                ", size=" + size +
+                ", zone='" + zone +
+                ", features=" + features +
+                ", reservations=" + reservations +
+                ", coordinateX=" + coordinateX +
+                ", coordinateY=" + coordinateY + '\'' +
+                '}';
     }
 
     public double getCoordinateX() {
@@ -65,36 +72,20 @@ public class Restaurant_table {
         this.coordinateY = coordinateY;
     }
 
+    public List<String> getFeatures() {
+        return features;
+    }
+
+    public void setFeatures(List<String> features) {
+        this.features = features;
+    }
+
     public int getId() {
         return id;
     }
 
     public void setId(int id) {
         this.id = id;
-    }
-
-    public boolean isAccessible() {
-        return isAccessible;
-    }
-
-    public void setAccessible(boolean accessible) {
-        isAccessible = accessible;
-    }
-
-    public boolean isQuietCorner() {
-        return isQuietCorner;
-    }
-
-    public void setQuietCorner(boolean quietCorner) {
-        isQuietCorner = quietCorner;
-    }
-
-    public boolean isWindowSeat() {
-        return isWindowSeat;
-    }
-
-    public void setWindowSeat(boolean windowSeat) {
-        isWindowSeat = windowSeat;
     }
 
     public List<Reservation> getReservations() {
@@ -120,4 +111,6 @@ public class Restaurant_table {
     public void setZone(String zone) {
         this.zone = zone;
     }
+
+
 }
